@@ -6,7 +6,6 @@ import PublicNavbar from './components/PublicNavbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicHome from './pages/PublicHome';
-import PublicArticleDetail from './pages/PublicArticleDetail';
 import ViewArticle from './pages/ViewArticle';
 import Login from './pages/Login';
 import Register from './pages/Register';

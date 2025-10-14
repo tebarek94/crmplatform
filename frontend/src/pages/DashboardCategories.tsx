@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { categoriesAPI } from '../api/categories';
 import type { Category } from '../types';
 import { useLanguage } from '../context/LanguageContext';
