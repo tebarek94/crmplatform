@@ -4,10 +4,10 @@
   "description": "Content Management System Backend API",
   "main": "dist/server.js",
   "scripts": {
-  "build": "tsc",
-  "start": "node dist/server.js",
-  "dev": "ts-node src/server.ts",
-  "lint": "eslint . --ext .ts"
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "lint": "eslint . --ext .ts"
   },
   "keywords": [
     "cms",

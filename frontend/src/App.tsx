@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import Navbar from './components/Navbar';
@@ -7,14 +7,14 @@ import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicHome from './pages/PublicHome';
 import ViewArticle from './pages/ViewArticle';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import AdminAuth from './pages/AdminAuth';
 import Articles from './pages/Articles';
 import Categories from './pages/Categories';
 import Dashboard from './pages/Dashboard';
 import DashboardArticles from './pages/DashboardArticles';
 import ArticleForm from './pages/ArticleForm';
 import DashboardCategories from './pages/DashboardCategories';
+import DashboardComments from './pages/DashboardComments';
 import NotFound from './pages/NotFound';
 
 function AppContent() {
@@ -37,9 +37,8 @@ function AppContent() {
               <Route path="/articles/:slug" element={<ViewArticle />} />
               <Route path="/categories" element={<Categories />} />
               
-              {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              {/* Admin Auth Route */}
+              <Route path="/admin-auth" element={<AdminAuth />} />
               
               {/* Protected Routes */}
               <Route
@@ -82,6 +81,14 @@ function AppContent() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/dashboard/comments"
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'editor']}>
+                    <DashboardComments />
+                  </ProtectedRoute>
+                }
+              />
               
               {/* 404 Not Found */}
               <Route path="*" element={<NotFound />} />
@@ -94,13 +101,11 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <LanguageProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </LanguageProvider>
-    </Router>
+    <LanguageProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

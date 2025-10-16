@@ -15,7 +15,7 @@ const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin-auth" replace />;
   }
 
   if (requiredRoles && user && !requiredRoles.includes(user.role)) {

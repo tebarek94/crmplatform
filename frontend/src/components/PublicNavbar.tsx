@@ -33,19 +33,12 @@ const PublicNavbar = () => {
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
             
-            {isAuthenticated ? (
+            {isAuthenticated && (
               <Link
                 to="/dashboard"
                 className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition font-medium"
               >
                 {t('dashboard')}
-              </Link>
-            ) : (
-              <Link
-                to="/login"
-                className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition font-medium"
-              >
-                {t('login')}
               </Link>
             )}
           </div>

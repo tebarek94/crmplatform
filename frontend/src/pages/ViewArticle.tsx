@@ -4,6 +4,7 @@ import { articlesAPI } from '../api/articles';
 import type { Article } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import Loading from '../components/Loading';
+import CommentSection from '../components/CommentSection';
 
 const ViewArticle = () => {
   const { t } = useLanguage();
@@ -237,6 +238,9 @@ const ViewArticle = () => {
             {t('home')}
           </button>
         </div>
+
+        {/* Comment Section */}
+        <CommentSection articleId={article.id} />
       </article>
     </div>
   );

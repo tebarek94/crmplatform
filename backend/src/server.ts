@@ -15,7 +15,12 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+})); // Enable CORS
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
@@ -38,7 +43,8 @@ app.get('/', (_req, res) => {
       auth: '/api/auth',
       articles: '/api/articles',
       categories: '/api/categories',
-      pages: '/api/pages'
+      pages: '/api/pages',
+      comments: '/api/comments'
     }
   });
 });
@@ -72,6 +78,8 @@ const startServer = async () => {
       console.log(`   - GET  /api/articles - Get all articles`);
       console.log(`   - GET  /api/categories - Get all categories`);
       console.log(`   - GET  /api/pages - Get all pages`);
+      console.log(`   - GET  /api/comments/article/:id - Get comments for article`);
+      console.log(`   - POST /api/comments - Create comment`);
       console.log('\n👤 Default admin credentials:');
       console.log('   Email: admin@example.com');
       console.log('   Password: admin123');

@@ -68,3 +68,13 @@ export interface RegisterData {
   password: string;
 }
 
+export interface Comment {
+  id: number;
+  article_id: number;
+  author_name: string;
+  author_email: string;
+  content: string;
+  status: 'pending' | 'approved' | 'spam';
+  created_at: string;
+}
+

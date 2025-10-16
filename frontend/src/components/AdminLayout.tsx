@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
+import { commentsAPI } from '../api/comments';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,29 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [commentCounts, setCommentCounts] = useState({ pending: 0, total: 0 });
+
+  useEffect(() => {
+    if (user?.role === 'admin' || user?.role === 'editor') {
+      fetchCommentCounts();
+    }
+  }, [user]);
+
+  const fetchCommentCounts = async () => {
+    try {
+      const [allComments, pendingComments] = await Promise.all([
+        commentsAPI.getAll(),
+        commentsAPI.getAll('pending')
+      ]);
+      
+      setCommentCounts({
+        total: allComments.comments.length,
+        pending: pendingComments.comments.length
+      });
+    } catch (error) {
+      console.error('Failed to fetch comment counts:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -50,6 +74,17 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </svg>
       ),
       roles: ['admin', 'editor'],
+    },
+    {
+      name: 'Comments',
+      path: '/dashboard/comments',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
+      roles: ['admin', 'editor'],
+      badge: commentCounts.pending > 0 ? commentCounts.pending : null,
     },
   ];
 
@@ -124,14 +159,25 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
                   isActive(item.path)
                     ? 'bg-primary-600 text-white shadow-lg'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                {item.icon}
-                <span className="font-medium">{item.name}</span>
+                <div className="flex items-center gap-3">
+                  {item.icon}
+                  <span className="font-medium">{item.name}</span>
+                </div>
+                {item.badge && (
+                  <span className={`px-2 py-1 text-xs font-bold rounded-full ${
+                    isActive(item.path)
+                      ? 'bg-white text-primary-600'
+                      : 'bg-red-500 text-white'
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             ))}
 
@@ -150,6 +196,26 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 </svg>
                 <span className="font-medium">{t('newArticle')}</span>
               </Link>
+              
+              {(user?.role === 'admin' || user?.role === 'editor') && (
+                <Link
+                  to="/dashboard/comments"
+                  onClick={() => setSidebarOpen(false)}
+                  className="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span className="font-medium">Manage Comments</span>
+                  </div>
+                  {commentCounts.pending > 0 && (
+                    <span className="px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white">
+                      {commentCounts.pending}
+                    </span>
+                  )}
+                </Link>
+              )}
             </div>
 
             {/* View Site */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { articlesAPI } from '../api/articles';
@@ -8,10 +8,16 @@ import DashboardStats from '../components/DashboardStats';
 import type { Article } from '../types';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/admin-auth');
+  };
 
   useEffect(() => {
     fetchArticles();
@@ -39,12 +45,22 @@ const Dashboard = () => {
     <AdminLayout>
       {/* Welcome Card */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-800 text-white rounded-xl shadow-lg p-8 mb-8">
-        <h2 className="text-3xl font-bold mb-2">
-          {t('welcome')}, {user?.username}!
-        </h2>
-        <p className="text-white/90">
-          Role: <span className="font-semibold capitalize">{user?.role}</span> • {user?.email}
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">
+              {t('welcome')}, {user?.username}!
+            </h2>
+            <p className="text-white/90">
+              Role: <span className="font-semibold capitalize">{user?.role}</span> • {user?.email}
+            </p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition font-medium"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -97,6 +113,27 @@ const Dashboard = () => {
               <p className="text-gray-600">{t('manageCategories')}</p>
               <div className="mt-4 flex items-center text-green-600 font-medium">
                 <span>Manage Categories</span>
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            <Link
+              to="/dashboard/comments"
+              className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all transform hover:-translate-y-1"
+            >
+              <div className="flex items-center mb-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Comments</h3>
+              <p className="text-gray-600">Review and moderate comments</p>
+              <div className="mt-4 flex items-center text-orange-600 font-medium">
+                <span>Manage Comments</span>
                 <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>

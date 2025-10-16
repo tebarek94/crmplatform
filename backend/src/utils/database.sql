@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS comments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   article_id INT NOT NULL,
   author_name VARCHAR(100) NOT NULL,
-  author_email VARCHAR(100) NOT NULL,
+  author_email VARCHAR(100) NULL,
   content TEXT NOT NULL,
   status ENUM('pending', 'approved', 'spam') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -116,4 +116,3 @@ INSERT INTO categories (name, slug, description) VALUES
 ('Tutorials', 'tutorials', 'Educational tutorials and guides'),
 ('Documentation', 'documentation', 'Technical documentation')
 ON DUPLICATE KEY UPDATE name=name;
-

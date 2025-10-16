@@ -66,6 +66,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
+    // Redirect to admin auth page after logout
+    window.location.href = '/admin-auth';
   };
 
   const value: AuthContextType = {

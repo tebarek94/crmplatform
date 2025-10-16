@@ -3,6 +3,7 @@ import authRoutes from './authRoutes';
 import articleRoutes from './articleRoutes';
 import categoryRoutes from './categoryRoutes';
 import pageRoutes from './pageRoutes';
+import commentRoutes from './commentRoutes';
 
 const router = Router();
 
@@ -11,6 +12,7 @@ router.use('/auth', authRoutes);
 router.use('/articles', articleRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/pages', pageRoutes);
+router.use('/comments', commentRoutes);
 
 // Health check endpoint
 router.get('/health', (_req, res) => {
