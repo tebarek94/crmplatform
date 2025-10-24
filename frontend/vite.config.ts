@@ -12,7 +12,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'https://crmplatform-tsv2.onrender.com',
+        target: 'https://crmplatform9.onrender.com',
         changeOrigin: true,
         secure: false,
       }
