@@ -20,25 +20,15 @@ services:
       - key: UPLOAD_PATH
         value: ./uploads
       - key: DB_HOST
-        fromDatabase:
-          name: crm-database
-          property: host
+        value: your-railway-mysql-host
       - key: DB_PORT
-        fromDatabase:
-          name: crm-database
-          property: port
+        value: 3306
       - key: DB_USER
-        fromDatabase:
-          name: crm-database
-          property: user
+        value: your-railway-mysql-user
       - key: DB_PASSWORD
-        fromDatabase:
-          name: crm-database
-          property: password
+        value: your-railway-mysql-password
       - key: DB_NAME
-        fromDatabase:
-          name: crm-database
-          property: database
+        value: your-railway-mysql-database
     healthCheckPath: /api/health
     autoDeploy: true
     branch: main
@@ -58,9 +48,3 @@ services:
     branch: main
     rootDir: frontend
 
-databases:
-  - name: crm-database
-    databaseName: crm_database
-    user: crm_user
-    plan: starter
-    region: oregon
