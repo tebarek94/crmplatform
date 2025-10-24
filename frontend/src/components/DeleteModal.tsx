@@ -19,7 +19,7 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, title, message, itemName, loa
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-gray-800 transition-opacity"
         onClick={onClose}
       ></div>
 

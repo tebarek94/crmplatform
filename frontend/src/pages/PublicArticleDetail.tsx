@@ -4,6 +4,7 @@ import { articlesAPI } from '../api/articles';
 import type { Article } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import Loading from '../components/Loading';
+import { isValidImageUrl, getDefaultPlaceholderImage } from '../utils/imageUtils';
 
 const PublicArticleDetail = () => {
   const { t } = useLanguage();
@@ -12,6 +13,7 @@ const PublicArticleDetail = () => {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -19,9 +21,12 @@ const PublicArticleDetail = () => {
 
       try {
         setLoading(true);
+        setError('');
+        setImageError(false);
         const data = await articlesAPI.getById(slug);
         setArticle(data.article);
       } catch (err: any) {
+        console.error('Error fetching article:', err);
         setError(err.response?.data?.error || 'Failed to load article');
       } finally {
         setLoading(false);
@@ -102,15 +107,71 @@ const PublicArticleDetail = () => {
       </div>
 
       {/* Featured Image */}
-      {article.featured_image && (
-        <div className="container mx-auto px-4 max-w-4xl -mt-8 mb-8">
-          <img
-            src={article.featured_image}
-            alt={article.title}
-            className="w-full h-96 object-cover rounded-lg shadow-2xl"
-          />
-        </div>
-      )}
+      <div className="container mx-auto px-4 max-w-4xl -mt-8 mb-8">
+        {isValidImageUrl(article.featured_image) && !imageError ? (
+          <div className="relative group">
+            <img
+              src={article.featured_image!}
+              alt={article.title}
+              className="w-full h-64 md:h-96 object-cover rounded-lg shadow-2xl transition-transform duration-300 group-hover:scale-105"
+              onError={() => {
+                console.log('Image failed to load:', article.featured_image);
+                setImageError(true);
+              }}
+              onLoad={() => {
+                console.log('Image loaded successfully:', article.featured_image);
+                setImageError(false);
+              }}
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-transparent group-hover:bg-gray-900 transition-all duration-300 rounded-lg"></div>
+          </div>
+        ) : (
+          <div className="w-full h-64 md:h-96 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-2xl flex items-center justify-center relative overflow-hidden">
+            {/* Try to show a placeholder image if possible */}
+            {article.featured_image && !isValidImageUrl(article.featured_image) && (
+              <div className="absolute inset-0">
+                <img
+                  src={getDefaultPlaceholderImage(article.title)}
+                  alt={`Placeholder for ${article.title}`}
+                  className="w-full h-full object-cover rounded-lg opacity-50"
+                  onError={() => {
+                    // If placeholder also fails, show the fallback UI
+                  }}
+                />
+              </div>
+            )}
+            
+            {/* Decorative background pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <svg className="w-full h-full" viewBox="0 0 100 100" fill="currentColor">
+                <circle cx="20" cy="20" r="2" />
+                <circle cx="80" cy="20" r="2" />
+                <circle cx="20" cy="80" r="2" />
+                <circle cx="80" cy="80" r="2" />
+                <circle cx="50" cy="50" r="1" />
+              </svg>
+            </div>
+            
+            <div className="text-center text-gray-500 relative z-10">
+              <svg className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-base md:text-lg font-medium">No Cover Image</p>
+              <p className="text-xs md:text-sm opacity-75">This article doesn't have a featured image</p>
+              
+              {/* Debug info */}
+              {import.meta.env.DEV && (
+                <div className="mt-4 text-xs text-gray-400">
+                  <p>Featured Image URL: {article.featured_image || 'null'}</p>
+                  <p>Image Error: {imageError ? 'Yes' : 'No'}</p>
+                  <p>Valid URL: {isValidImageUrl(article.featured_image) ? 'Yes' : 'No'}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Article Content */}
       <article className="container mx-auto px-4 max-w-4xl pb-12">
@@ -125,9 +186,10 @@ const PublicArticleDetail = () => {
             <div
               className="text-gray-800 leading-relaxed"
               style={{ whiteSpace: 'pre-wrap' }}
-            >
-              {article.content}
-            </div>
+              dangerouslySetInnerHTML={{ 
+                __html: article.content.replace(/\n/g, '<br />') 
+              }}
+            />
           </div>
 
           {/* Article Footer */}

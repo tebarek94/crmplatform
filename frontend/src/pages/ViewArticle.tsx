@@ -5,6 +5,7 @@ import type { Article } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import Loading from '../components/Loading';
 import CommentSection from '../components/CommentSection';
+import { isValidImageUrl, getDefaultPlaceholderImage } from '../utils/imageUtils';
 
 const ViewArticle = () => {
   const { t } = useLanguage();
@@ -13,16 +14,22 @@ const ViewArticle = () => {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchArticle = async () => {
       if (!slug) return;
-
       try {
         setLoading(true);
+        setError('');
+        setImageError(false);
+        console.log('Fetching article with slug:', slug);
         const data = await articlesAPI.getById(slug);
+        console.log('API response:', data);
         setArticle(data.article);
       } catch (err: any) {
+        console.error('Error fetching article:', err);
+        console.error('Error details:', err.response?.data);
         setError(err.response?.data?.error || 'Failed to load article');
       } finally {
         setLoading(false);
@@ -45,14 +52,29 @@ const ViewArticle = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('articleNotFound')}</h2>
-          <p className="text-gray-600 mb-8">{error || t('noResults')}</p>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition font-medium"
-          >
-            ← {t('home')}
-          </button>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Article Not Found</h2>
+          <p className="text-gray-600 mb-4">
+            {error || 'The article you are looking for does not exist or has been removed.'}
+          </p>
+          {slug && (
+            <p className="text-sm text-gray-500 mb-8">
+              Slug: <code className="bg-gray-100 px-2 py-1 rounded">{slug}</code>
+            </p>
+          )}
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => navigate('/')}
+              className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition font-medium"
+            >
+              ← Home
+            </button>
+            <button
+              onClick={() => navigate('/articles')}
+              className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition font-medium"
+            >
+              Browse Articles
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -61,38 +83,39 @@ const ViewArticle = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Article Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
-        <div className="container mx-auto px-4 max-w-4xl">
+      <div className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-12 sm:py-16 lg:py-20">
+        <div className="container-narrow">
           <button
             onClick={() => navigate('/')}
-            className="text-white/90 hover:text-white mb-6 inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm"
+            className="text-white/90 hover:text-white mb-4 sm:mb-6 inline-flex items-center gap-2 bg-white/10 px-3 py-2 sm:px-4 sm:py-2 rounded-lg backdrop-blur-sm text-sm sm:text-base"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            {t('backToArticles')}
+            <span className="hidden sm:inline">{t('backToArticles')}</span>
+            <span className="sm:hidden">Back</span>
           </button>
 
           {article.category_name && (
-            <span className="inline-block bg-white/20 text-white text-sm px-3 py-1 rounded-full mb-4">
+            <span className="inline-block bg-white/20 text-white text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1 rounded-full mb-3 sm:mb-4">
               {article.category_name}
             </span>
           )}
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">{article.title}</h1>
+          <h1 className="text-responsive-3xl font-bold mb-4 sm:mb-6">{article.title}</h1>
 
-          <div className="flex flex-wrap items-center gap-4 text-white/90">
+          <div className="flex flex-wrap items-center gap-responsive-sm text-white/90 text-sm sm:text-base">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <span>{article.author_name}</span>
+              <span className="truncate">{article.author_name}</span>
             </div>
-            <span>•</span>
-            <span>{new Date(article.created_at).toLocaleDateString()}</span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="flex-shrink-0">{new Date(article.created_at).toLocaleDateString()}</span>
+            <span className="hidden sm:inline">•</span>
             <div className="flex items-center gap-1">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
@@ -103,15 +126,72 @@ const ViewArticle = () => {
       </div>
 
       {/* Featured Image */}
-      {article.featured_image && (
-        <div className="container mx-auto px-4 max-w-4xl -mt-8">
-          <img
-            src={article.featured_image}
-            alt={article.title}
-            className="w-full h-96 object-cover rounded-lg shadow-2xl"
-          />
-        </div>
-      )}
+      <div className="container-narrow -mt-6 sm:-mt-8">
+        {isValidImageUrl(article.featured_image) && !imageError ? (
+          <div className="relative group">
+            <img
+              src={article.featured_image!}
+              alt={article.title}
+              className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover rounded-lg shadow-2xl transition-transform duration-300 group-hover:scale-105"
+              onError={() => {
+                console.log('Image failed to load:', article.featured_image);
+                setImageError(true);
+              }}
+              onLoad={() => {
+                console.log('Image loaded successfully:', article.featured_image);
+                setImageError(false);
+              }}
+              loading="lazy"
+            />
+            {/* Image overlay for better text readability if needed */}
+            <div className="absolute inset-0 bg-transparent group-hover:bg-gray-900 transition-all duration-300 rounded-lg"></div>
+          </div>
+        ) : (
+          <div className="w-full h-48 sm:h-64 md:h-80 lg:h-96 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg shadow-2xl flex items-center justify-center relative overflow-hidden">
+            {/* Try to show a placeholder image if possible */}
+            {article.featured_image && !isValidImageUrl(article.featured_image) && (
+              <div className="absolute inset-0">
+                <img
+                  src={getDefaultPlaceholderImage(article.title)}
+                  alt={`Placeholder for ${article.title}`}
+                  className="w-full h-full object-cover rounded-lg opacity-50"
+                  onError={() => {
+                    // If placeholder also fails, show the fallback UI
+                  }}
+                />
+              </div>
+            )}
+            
+            {/* Decorative background pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <svg className="w-full h-full" viewBox="0 0 100 100" fill="currentColor">
+                <circle cx="20" cy="20" r="2" />
+                <circle cx="80" cy="20" r="2" />
+                <circle cx="20" cy="80" r="2" />
+                <circle cx="80" cy="80" r="2" />
+                <circle cx="50" cy="50" r="1" />
+              </svg>
+            </div>
+            
+            <div className="text-center text-primary-600 relative z-10">
+              <svg className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-base md:text-lg font-medium">No Cover Image</p>
+              <p className="text-xs md:text-sm opacity-75">This article doesn't have a featured image</p>
+              
+              {/* Debug info */}
+              {import.meta.env.DEV && (
+                <div className="mt-4 text-xs text-gray-400">
+                  <p>Featured Image URL: {article.featured_image || 'null'}</p>
+                  <p>Image Error: {imageError ? 'Yes' : 'No'}</p>
+                  <p>Valid URL: {isValidImageUrl(article.featured_image) ? 'Yes' : 'No'}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Article Content */}
       <article className="container mx-auto px-4 max-w-4xl py-12">
@@ -134,9 +214,10 @@ const ViewArticle = () => {
                 wordWrap: 'break-word',
                 lineHeight: '1.8'
               }}
-            >
-              {article.content}
-            </div>
+              dangerouslySetInnerHTML={{ 
+                __html: article.content.replace(/\n/g, '<br />') 
+              }}
+            />
           </div>
 
           {/* Author Info */}

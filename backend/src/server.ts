@@ -63,7 +63,7 @@ const startServer = async () => {
     
     if (!dbConnected) {
       console.error('⚠️  Failed to connect to database. Please check your configuration.');
-      console.log('💡 Make sure MySQL is running and credentials in .env are correct');
+      console.log('💡 Make sure PostgreSQL is running and credentials in .env are correct');
     }
 
     app.listen(PORT, () => {

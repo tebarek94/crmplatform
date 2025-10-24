@@ -19,16 +19,19 @@ services:
         value: 5242880
       - key: UPLOAD_PATH
         value: ./uploads
-      - key: DB_HOST
-        value: your-railway-mysql-host
-      - key: DB_PORT
-        value: 3306
-      - key: DB_USER
-        value: your-railway-mysql-user
-      - key: DB_PASSWORD
-        value: your-railway-mysql-password
-      - key: DB_NAME
-        value: your-railway-mysql-database
+      - key: DATABASE_URL
+        value: YOUR_NEON_CONNECTION_STRING_HERE
+      # Alternative: Individual Neon parameters (if not using DATABASE_URL)
+      # - key: DB_HOST
+      #   value: YOUR_NEON_HOST.neon.tech
+      # - key: DB_PORT
+      #   value: 5432
+      # - key: DB_USER
+      #   value: YOUR_NEON_USERNAME
+      # - key: DB_PASSWORD
+      #   value: YOUR_NEON_PASSWORD
+      # - key: DB_NAME
+      #   value: YOUR_NEON_DATABASE_NAME
     healthCheckPath: /api/health
     autoDeploy: true
     branch: main

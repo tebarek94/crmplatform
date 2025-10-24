@@ -2,7 +2,6 @@ import { Response } from 'express';
 import pool from '../config/database';
 import { AuthRequest } from '../types';
 import { createSlug } from '../utils/helpers';
-import { RowDataPacket } from 'mysql2';
 
 export const getAllPages = async (
   req: AuthRequest,
@@ -16,20 +15,21 @@ export const getAllPages = async (
     const params: any[] = [];
 
     if (status) {
-      query += ' AND status = ?';
+      query += ' AND status = $' + (params.length + 1);
       params.push(status);
     } else {
-      query += ' AND status = "published"';
+      query += ' AND status = \'published\'';
     }
 
     if (language) {
-      query += ' AND language = ?';
+      query += ' AND language = $' + (params.length + 1);
       params.push(language);
     }
 
     query += ' ORDER BY created_at DESC';
 
-    const [pages] = await pool.query<RowDataPacket[]>(query, params);
+    const result = await pool.query(query, params);
+    const pages = result.rows;
 
     res.json({ pages });
   } catch (error) {
@@ -45,10 +45,11 @@ export const getPageBySlug = async (
   try {
     const { slug } = req.params;
 
-    const [pages] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM pages WHERE slug = ?',
+    const result = await pool.query(
+      'SELECT * FROM pages WHERE slug = $1',
       [slug]
     );
+    const pages = result.rows;
 
     if (pages.length === 0) {
       res.status(404).json({ error: 'Page not found' });
@@ -72,22 +73,23 @@ export const createPage = async (
     const slug = createSlug(title);
 
     // Check if slug exists
-    const [existing] = await pool.query<RowDataPacket[]>(
-      'SELECT id FROM pages WHERE slug = ?',
+    const result = await pool.query(
+      'SELECT id FROM pages WHERE slug = $1',
       [slug]
     );
+    const existing = result.rows;
 
     let finalSlug = slug;
     if (existing.length > 0) {
       finalSlug = `${slug}-${Date.now()}`;
     }
 
-    const [result] = await pool.query(
-      'INSERT INTO pages (title, slug, content, language, status) VALUES (?, ?, ?, ?, ?)',
+    const insertResult = await pool.query(
+      'INSERT INTO pages (title, slug, content, language, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
       [title, finalSlug, content, language || 'en', status || 'draft']
     );
 
-    const pageId = (result as any).insertId;
+    const pageId = insertResult.rows[0].id;
 
     res.status(201).json({
       message: 'Page created successfully',
@@ -107,10 +109,11 @@ export const updatePage = async (
     const { id } = req.params;
     const { title, content, language, status } = req.body;
 
-    const [pages] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM pages WHERE id = ?',
+    const result = await pool.query(
+      'SELECT * FROM pages WHERE id = $1',
       [id]
     );
+    const pages = result.rows;
 
     if (pages.length === 0) {
       res.status(404).json({ error: 'Page not found' });
@@ -125,7 +128,7 @@ export const updatePage = async (
     }
 
     await pool.query(
-      'UPDATE pages SET title = ?, slug = ?, content = ?, language = ?, status = ? WHERE id = ?',
+      'UPDATE pages SET title = $1, slug = $2, content = $3, language = $4, status = $5 WHERE id = $6',
       [
         title || page.title,
         slug,
@@ -150,17 +153,18 @@ export const deletePage = async (
   try {
     const { id } = req.params;
 
-    const [pages] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM pages WHERE id = ?',
+    const result = await pool.query(
+      'SELECT * FROM pages WHERE id = $1',
       [id]
     );
+    const pages = result.rows;
 
     if (pages.length === 0) {
       res.status(404).json({ error: 'Page not found' });
       return;
     }
 
-    await pool.query('DELETE FROM pages WHERE id = ?', [id]);
+    await pool.query('DELETE FROM pages WHERE id = $1', [id]);
 
     res.json({ message: 'Page deleted successfully' });
   } catch (error) {

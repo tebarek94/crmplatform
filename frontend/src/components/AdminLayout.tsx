@@ -115,9 +115,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <div className="flex">
         {/* Sidebar */}
         <aside
-          className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:transform-none ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0`}
+          className={`sidebar-responsive ${
+            sidebarOpen ? 'sidebar-responsive-open' : 'sidebar-responsive-closed'
+          }`}
         >
           {/* Sidebar Header */}
           <div className="h-20 flex items-center justify-between px-6 border-b border-gray-200">
@@ -251,7 +251,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            className="overlay-responsive"
             onClick={() => setSidebarOpen(false)}
           ></div>
         )}

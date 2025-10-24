@@ -69,25 +69,25 @@ const PublicHome = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Banner */}
-      <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
-        <div className="container mx-auto px-4">
+      <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-12 sm:py-16 lg:py-20">
+        <div className="container-responsive">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl font-bold mb-6">{t('heroTitle')}</h1>
-            <p className="text-xl mb-8">{t('heroSubtitle')}</p>
+            <h1 className="text-responsive-4xl font-bold mb-4 sm:mb-6">{t('heroTitle')}</h1>
+            <p className="text-responsive-lg mb-6 sm:mb-8">{t('heroSubtitle')}</p>
             
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <input
                   type="text"
                   placeholder={t('searchArticles')}
-                  className="flex-1 px-6 py-4 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
+                  className="flex-1 input-responsive text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <button
                   type="submit"
-                  className="bg-white text-primary-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition"
+                  className="btn-responsive-md bg-white text-primary-600 rounded-lg font-semibold hover:bg-gray-100 transition"
                 >
                   {t('search')}
                 </button>
@@ -98,12 +98,12 @@ const PublicHome = () => {
       </section>
 
       {/* Categories Bar */}
-      <section className="bg-white shadow-md py-4 sticky top-0 z-10">
-        <div className="container mx-auto px-4">
-          <div className="flex gap-2 overflow-x-auto pb-2">
+      <section className="bg-white shadow-md py-3 sm:py-4 sticky top-0 z-10">
+        <div className="container-responsive">
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2">
             <button
               onClick={() => handleCategoryClick('')}
-              className={`px-4 py-2 rounded-full whitespace-nowrap transition ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 rounded-full whitespace-nowrap transition text-sm sm:text-base ${
                 selectedCategory === ''
                   ? 'bg-primary-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -115,13 +115,14 @@ const PublicHome = () => {
               <button
                 key={category.id}
                 onClick={() => handleCategoryClick(category.slug)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap transition ${
+                className={`px-3 py-2 sm:px-4 sm:py-2 rounded-full whitespace-nowrap transition text-sm sm:text-base ${
                   selectedCategory === category.slug
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {category.name} ({category.article_count})
+                <span className="hidden sm:inline">{category.name} ({category.article_count})</span>
+                <span className="sm:hidden">{category.name}</span>
               </button>
             ))}
           </div>
@@ -129,49 +130,49 @@ const PublicHome = () => {
       </section>
 
       {/* Articles Grid */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
+      <section className="py-8 sm:py-12">
+        <div className="container-responsive">
           {loading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-b-2 border-primary-600"></div>
             </div>
           ) : articles.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              <div className="grid-responsive-3 gap-responsive-md mb-6 sm:mb-8">
                 {articles.map((article) => (
                   <Link
                     key={article.id}
                     to={`/article/${article.slug}`}
-                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all transform hover:-translate-y-1"
+                    className="card-responsive-hover overflow-hidden transform hover:-translate-y-1 transition-all duration-300"
                   >
                     {article.featured_image ? (
                       <img
                         src={article.featured_image}
                         alt={article.title}
-                        className="w-full h-48 object-cover"
+                        className="img-responsive-video"
                       />
                     ) : (
-                      <div className="w-full h-48 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                        <svg className="w-16 h-16 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-full aspect-video bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                        <svg className="w-12 h-12 sm:w-16 sm:h-16 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
                     )}
-                    <div className="p-4">
+                    <div className="p-responsive-sm">
                       {article.category_name && (
                         <span className="inline-block bg-primary-100 text-primary-700 text-xs px-2 py-1 rounded-full mb-2">
                           {article.category_name}
                         </span>
                       )}
-                      <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2 hover:text-primary-600">
+                      <h3 className="text-responsive-base font-bold text-gray-800 mb-2 hover:text-primary-600 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                         {article.title}
                       </h3>
                       {article.excerpt && (
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-3">{article.excerpt}</p>
+                        <p className="text-gray-600 text-responsive-sm mb-3 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{article.excerpt}</p>
                       )}
                       <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{article.author_name}</span>
-                        <span>{article.views} {t('views')}</span>
+                        <span className="truncate">{article.author_name}</span>
+                        <span className="flex-shrink-0">{article.views} {t('views')}</span>
                       </div>
                       <div className="text-xs text-gray-400 mt-2">
                         {new Date(article.created_at).toLocaleDateString()}
@@ -183,23 +184,24 @@ const PublicHome = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2">
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-responsive-sm">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    className="btn-responsive-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
-                    ← Previous
+                    <span className="hidden sm:inline">← Previous</span>
+                    <span className="sm:hidden">← Prev</span>
                   </button>
                   
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 overflow-x-auto">
                     {[...Array(Math.min(5, totalPages))].map((_, idx) => {
                       const pageNum = idx + 1;
                       return (
                         <button
                           key={pageNum}
                           onClick={() => setPage(pageNum)}
-                          className={`px-4 py-2 rounded-lg transition ${
+                          className={`px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition text-sm sm:text-base ${
                             page === pageNum
                               ? 'bg-primary-600 text-white'
                               : 'bg-white border border-gray-300 hover:bg-gray-50'
@@ -214,9 +216,10 @@ const PublicHome = () => {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    className="btn-responsive-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
-                    Next →
+                    <span className="hidden sm:inline">Next →</span>
+                    <span className="sm:hidden">Next →</span>
                   </button>
                 </div>
               )}

@@ -2,7 +2,6 @@ import { Response } from 'express';
 import pool from '../config/database';
 import { AuthRequest } from '../types';
 import { createSlug, paginate } from '../utils/helpers';
-import { RowDataPacket } from 'mysql2';
 
 export const getAllArticles = async (
   req: AuthRequest,
@@ -28,45 +27,63 @@ export const getAllArticles = async (
     const params: any[] = [];
 
     if (status) {
-      query += ' AND a.status = ?';
+      query += ' AND a.status = $' + (params.length + 1);
       params.push(status);
     } else {
-      query += ' AND a.status = "published"';
+      query += ' AND a.status = $' + (params.length + 1);
+      params.push('published');
     }
 
     if (category) {
-      query += ' AND c.slug = ?';
+      query += ' AND c.slug = $' + (params.length + 1);
       params.push(category);
     }
 
     if (language) {
-      query += ' AND a.language = ?';
+      query += ' AND a.language = $' + (params.length + 1);
       params.push(language);
     }
 
     if (search) {
-      query += ' AND (a.title LIKE ? OR a.content LIKE ?)';
+      query += ' AND (a.title ILIKE $' + (params.length + 1) + ' OR a.content ILIKE $' + (params.length + 2) + ')';
       params.push(`%${search}%`, `%${search}%`);
     }
 
-    query += ' ORDER BY a.created_at DESC LIMIT ? OFFSET ?';
+    query += ' ORDER BY a.created_at DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
     params.push(limitValue, offset);
 
-    const [articles] = await pool.query<RowDataPacket[]>(query, params);
+    const result = await pool.query(query, params);
+    const articles = result.rows;
 
     // Get total count
     let countQuery = 'SELECT COUNT(*) as total FROM articles a WHERE 1=1';
     const countParams: any[] = [];
 
     if (status) {
-      countQuery += ' AND a.status = ?';
+      countQuery += ' AND a.status = $' + (countParams.length + 1);
       countParams.push(status);
     } else {
-      countQuery += ' AND a.status = "published"';
+      countQuery += ' AND a.status = $' + (countParams.length + 1);
+      countParams.push('published');
     }
 
-    const [countResult] = await pool.query<RowDataPacket[]>(countQuery, countParams);
-    const total = countResult[0].total;
+    if (category) {
+      countQuery += ' AND c.slug = $' + (countParams.length + 1);
+      countParams.push(category);
+    }
+
+    if (language) {
+      countQuery += ' AND a.language = $' + (countParams.length + 1);
+      countParams.push(language);
+    }
+
+    if (search) {
+      countQuery += ' AND (a.title ILIKE $' + (countParams.length + 1) + ' OR a.content ILIKE $' + (countParams.length + 2) + ')';
+      countParams.push(`%${search}%`, `%${search}%`);
+    }
+
+    const countResult = await pool.query(countQuery, countParams);
+    const total = countResult.rows[0].total;
 
     res.json({
       articles,
@@ -89,27 +106,46 @@ export const getArticleById = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    
+    // Check if id is a number (integer) or a slug (string)
+    const isNumeric = /^\d+$/.test(id);
+    
+    let query, params;
+    if (isNumeric) {
+      // If it's a number, search by ID
+      query = `SELECT a.*, c.name as category_name, u.username as author_name
+               FROM articles a
+               LEFT JOIN categories c ON a.category_id = c.id
+               LEFT JOIN users u ON a.author_id = u.id
+               WHERE a.id = $1`;
+      params = [parseInt(id)];
+    } else {
+      // If it's not a number, search by slug
+      query = `SELECT a.*, c.name as category_name, u.username as author_name
+               FROM articles a
+               LEFT JOIN categories c ON a.category_id = c.id
+               LEFT JOIN users u ON a.author_id = u.id
+               WHERE a.slug = $1`;
+      params = [id];
+    }
 
-    const [articles] = await pool.query<RowDataPacket[]>(
-      `SELECT a.*, c.name as category_name, u.username as author_name
-       FROM articles a
-       LEFT JOIN categories c ON a.category_id = c.id
-       LEFT JOIN users u ON a.author_id = u.id
-       WHERE a.id = ? OR a.slug = ?`,
-      [id, id]
-    );
+    const result = await pool.query(query, params);
+    const articles = result.rows;
 
     if (articles.length === 0) {
       res.status(404).json({ error: 'Article not found' });
       return;
     }
 
-    // Increment views
-    await pool.query('UPDATE articles SET views = views + 1 WHERE id = ?', [
-      articles[0].id
-    ]);
+    const article = articles[0] as any;
 
-    res.json({ article: articles[0] });
+    // Increment view count
+    await pool.query(
+      'UPDATE articles SET views = views + 1 WHERE id = $1',
+      [article.id]
+    );
+
+    res.json({ article });
   } catch (error) {
     console.error('Get article error:', error);
     res.status(500).json({ error: 'Failed to fetch article' });
@@ -132,24 +168,34 @@ export const createArticle = async (
     } = req.body;
     const author_id = req.user!.id;
 
-    const slug = createSlug(title);
+    // Truncate title if too long (max 255 characters)
+    const truncatedTitle = title.length > 255 ? title.substring(0, 252) + '...' : title;
+    const slug = createSlug(truncatedTitle);
 
     // Check if slug exists
-    const [existing] = await pool.query<RowDataPacket[]>(
-      'SELECT id FROM articles WHERE slug = ?',
+    const result = await pool.query(
+      'SELECT id FROM articles WHERE slug = $1',
       [slug]
     );
+    const existing = result.rows;
 
     let finalSlug = slug;
     if (existing.length > 0) {
       finalSlug = `${slug}-${Date.now()}`;
     }
+    
+    // Ensure slug doesn't exceed 255 characters
+    if (finalSlug.length > 255) {
+      finalSlug = finalSlug.substring(0, 255);
+    }
+    
+    // No need to truncate featured_image anymore - TEXT field can handle long URLs/base64
 
-    const [result] = await pool.query(
+    const insertResult = await pool.query(
       `INSERT INTO articles (title, slug, content, excerpt, featured_image, category_id, author_id, language, status, published_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
       [
-        title,
+        truncatedTitle,
         finalSlug,
         content,
         excerpt,
@@ -162,7 +208,7 @@ export const createArticle = async (
       ]
     );
 
-    const articleId = (result as any).insertId;
+    const articleId = insertResult.rows[0].id;
 
     res.status(201).json({
       message: 'Article created successfully',
@@ -191,10 +237,11 @@ export const updateArticle = async (
     } = req.body;
 
     // Check if article exists
-    const [articles] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM articles WHERE id = ?',
+    const result = await pool.query(
+      'SELECT * FROM articles WHERE id = $1',
       [id]
     );
+    const articles = result.rows;
 
     if (articles.length === 0) {
       res.status(404).json({ error: 'Article not found' });
@@ -212,19 +259,29 @@ export const updateArticle = async (
       return;
     }
 
+    // Truncate title if too long (max 255 characters)
+    const truncatedTitle = title && title.length > 255 ? title.substring(0, 252) + '...' : title;
+    
     let slug = article.slug;
-    if (title && title !== article.title) {
-      slug = createSlug(title);
+    if (truncatedTitle && truncatedTitle !== article.title) {
+      slug = createSlug(truncatedTitle);
     }
+    
+    // Ensure slug doesn't exceed 255 characters
+    if (slug.length > 255) {
+      slug = slug.substring(0, 255);
+    }
+    
+    // No need to truncate featured_image anymore - TEXT field can handle long URLs/base64
 
     await pool.query(
       `UPDATE articles 
-       SET title = ?, slug = ?, content = ?, excerpt = ?, featured_image = ?, 
-           category_id = ?, language = ?, status = ?,
+       SET title = $1, slug = $2, content = $3, excerpt = $4, featured_image = $5, 
+           category_id = $6, language = $7, status = $8,
            published_at = CASE WHEN status = 'published' AND published_at IS NULL THEN NOW() ELSE published_at END
-       WHERE id = ?`,
+       WHERE id = $9`,
       [
-        title || article.title,
+        truncatedTitle || article.title,
         slug,
         content || article.content,
         excerpt || article.excerpt,
@@ -251,10 +308,11 @@ export const deleteArticle = async (
     const { id } = req.params;
 
     // Check if article exists
-    const [articles] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM articles WHERE id = ?',
+    const result = await pool.query(
+      'SELECT * FROM articles WHERE id = $1',
       [id]
     );
+    const articles = result.rows;
 
     if (articles.length === 0) {
       res.status(404).json({ error: 'Article not found' });
@@ -271,7 +329,7 @@ export const deleteArticle = async (
       return;
     }
 
-    await pool.query('DELETE FROM articles WHERE id = ?', [id]);
+    await pool.query('DELETE FROM articles WHERE id = $1', [id]);
 
     res.json({ message: 'Article deleted successfully' });
   } catch (error) {

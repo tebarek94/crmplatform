@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
-import { RowDataPacket } from 'mysql2';
 
 interface Comment {
   id: number;
@@ -16,13 +15,14 @@ export const getCommentsByArticle = async (req: Request, res: Response): Promise
   try {
     const { articleId } = req.params;
 
-    const [comments] = await pool.query<RowDataPacket[]>(
+    const result = await pool.query(
       `SELECT id, article_id, author_name, author_email, content, status, created_at 
        FROM comments 
-       WHERE article_id = ? AND status IN ('approved', 'pending')
+       WHERE article_id = $1 AND status IN ('approved', 'pending')
        ORDER BY created_at DESC`,
       [articleId]
     );
+    const comments = result.rows;
 
     res.json({ comments });
   } catch (error) {
@@ -42,10 +42,11 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
     }
 
     // Check if article exists
-    const [articles] = await pool.query<RowDataPacket[]>(
-      'SELECT id FROM articles WHERE id = ? AND status = "published"',
+    const result = await pool.query(
+      'SELECT id FROM articles WHERE id = $1 AND status = \'published\'',
       [article_id]
     );
+    const articles = result.rows;
 
     if (articles.length === 0) {
       res.status(404).json({ error: 'Article not found' });
@@ -53,12 +54,12 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
     }
 
     // Create comment
-    const [result] = await pool.query(
-      'INSERT INTO comments (article_id, author_name, author_email, content, status) VALUES (?, ?, ?, ?, ?)',
+    const insertResult = await pool.query(
+      'INSERT INTO comments (article_id, author_name, author_email, content, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
       [article_id, author_name, author_email || null, content, 'pending']
     );
 
-    const commentId = (result as any).insertId;
+    const commentId = insertResult.rows[0].id;
 
     res.status(201).json({
       message: 'Comment submitted successfully. It will be reviewed before being published.',
@@ -82,12 +83,12 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
     const { id } = req.params;
     const { content } = req.body;
 
-    const [result] = await pool.query(
-      'UPDATE comments SET content = ? WHERE id = ?',
+    const result = await pool.query(
+      'UPDATE comments SET content = $1 WHERE id = $2',
       [content, id]
     );
 
-    if ((result as any).affectedRows === 0) {
+    if (result.rowCount === 0) {
       res.status(404).json({ error: 'Comment not found' });
       return;
     }
@@ -103,12 +104,12 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
   try {
     const { id } = req.params;
 
-    const [result] = await pool.query(
-      'DELETE FROM comments WHERE id = ?',
+    const result = await pool.query(
+      'DELETE FROM comments WHERE id = $1',
       [id]
     );
 
-    if ((result as any).affectedRows === 0) {
+    if (result.rowCount === 0) {
       res.status(404).json({ error: 'Comment not found' });
       return;
     }
@@ -124,12 +125,12 @@ export const approveComment = async (req: Request, res: Response): Promise<void>
   try {
     const { id } = req.params;
 
-    const [result] = await pool.query(
-      'UPDATE comments SET status = "approved" WHERE id = ?',
+    const result = await pool.query(
+      'UPDATE comments SET status = \'approved\' WHERE id = $1',
       [id]
     );
 
-    if ((result as any).affectedRows === 0) {
+    if (result.rowCount === 0) {
       res.status(404).json({ error: 'Comment not found' });
       return;
     }
@@ -145,12 +146,12 @@ export const rejectComment = async (req: Request, res: Response): Promise<void> 
   try {
     const { id } = req.params;
 
-    const [result] = await pool.query(
-      'UPDATE comments SET status = "spam" WHERE id = ?',
+    const result = await pool.query(
+      'UPDATE comments SET status = \'spam\' WHERE id = $1',
       [id]
     );
 
-    if ((result as any).affectedRows === 0) {
+    if (result.rowCount === 0) {
       res.status(404).json({ error: 'Comment not found' });
       return;
     }
@@ -176,13 +177,14 @@ export const getAllComments = async (req: Request, res: Response): Promise<void>
     const params: any[] = [];
 
     if (status) {
-      query += ' WHERE c.status = ?';
+      query += ' WHERE c.status = $1';
       params.push(status);
     }
 
     query += ' ORDER BY c.created_at DESC';
 
-    const [comments] = await pool.query<RowDataPacket[]>(query, params);
+    const result = await pool.query(query, params);
+    const comments = result.rows;
 
     res.json({ comments });
   } catch (error) {

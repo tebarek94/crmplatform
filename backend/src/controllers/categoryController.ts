@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
 import { createSlug } from '../utils/helpers';
-import { RowDataPacket } from 'mysql2';
 import { AuthRequest } from '../types';
 
 export const getAllCategories = async (
@@ -9,13 +8,14 @@ export const getAllCategories = async (
   res: Response
 ): Promise<void> => {
   try {
-    const [categories] = await pool.query<RowDataPacket[]>(
+    const result = await pool.query(
       `SELECT c.*, COUNT(a.id) as article_count
        FROM categories c
        LEFT JOIN articles a ON c.id = a.category_id AND a.status = 'published'
        GROUP BY c.id
        ORDER BY c.name ASC`
     );
+    const categories = result.rows;
 
     res.json({ categories });
   } catch (error) {
@@ -31,10 +31,11 @@ export const getCategoryById = async (
   try {
     const { id } = req.params;
 
-    const [categories] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM categories WHERE id = ? OR slug = ?',
+    const result = await pool.query(
+      'SELECT * FROM categories WHERE id = $1 OR slug = $2',
       [id, id]
     );
+    const categories = result.rows;
 
     if (categories.length === 0) {
       res.status(404).json({ error: 'Category not found' });
@@ -58,22 +59,23 @@ export const createCategory = async (
     const slug = createSlug(name);
 
     // Check if slug exists
-    const [existing] = await pool.query<RowDataPacket[]>(
-      'SELECT id FROM categories WHERE slug = ?',
+    const result = await pool.query(
+      'SELECT id FROM categories WHERE slug = $1',
       [slug]
     );
+    const existing = result.rows;
 
     if (existing.length > 0) {
       res.status(400).json({ error: 'Category with this name already exists' });
       return;
     }
 
-    const [result] = await pool.query(
-      'INSERT INTO categories (name, slug, description, parent_id) VALUES (?, ?, ?, ?)',
+    const insertResult = await pool.query(
+      'INSERT INTO categories (name, slug, description, parent_id) VALUES ($1, $2, $3, $4) RETURNING id',
       [name, slug, description, parent_id || null]
     );
 
-    const categoryId = (result as any).insertId;
+    const categoryId = insertResult.rows[0].id;
 
     res.status(201).json({
       message: 'Category created successfully',
@@ -93,10 +95,11 @@ export const updateCategory = async (
     const { id } = req.params;
     const { name, description, parent_id } = req.body;
 
-    const [categories] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM categories WHERE id = ?',
+    const result = await pool.query(
+      'SELECT * FROM categories WHERE id = $1',
       [id]
     );
+    const categories = result.rows;
 
     if (categories.length === 0) {
       res.status(404).json({ error: 'Category not found' });
@@ -109,7 +112,7 @@ export const updateCategory = async (
     }
 
     await pool.query(
-      'UPDATE categories SET name = ?, slug = ?, description = ?, parent_id = ? WHERE id = ?',
+      'UPDATE categories SET name = $1, slug = $2, description = $3, parent_id = $4 WHERE id = $5',
       [
         name || categories[0].name,
         slug,
@@ -134,17 +137,18 @@ export const deleteCategory = async (
     const { id } = req.params;
 
     // Check if category exists
-    const [categories] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM categories WHERE id = ?',
+    const result = await pool.query(
+      'SELECT * FROM categories WHERE id = $1',
       [id]
     );
+    const categories = result.rows;
 
     if (categories.length === 0) {
       res.status(404).json({ error: 'Category not found' });
       return;
     }
 
-    await pool.query('DELETE FROM categories WHERE id = ?', [id]);
+    await pool.query('DELETE FROM categories WHERE id = $1', [id]);
 
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
