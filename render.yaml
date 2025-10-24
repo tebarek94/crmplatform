@@ -1,0 +1,75 @@
+services:
+  # Backend API Service
+  - type: web
+    name: crm-backend
+    env: node
+    plan: starter
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: MAX_FILE_SIZE
+        value: 5242880
+      - key: UPLOAD_PATH
+        value: ./uploads
+      - key: DB_HOST
+        fromDatabase:
+          name: crm-database
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: crm-database
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: crm-database
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: crm-database
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: crm-database
+          property: database
+    healthCheckPath: /api/health
+    autoDeploy: true
+    branch: main
+    rootDir: backend
+
+  # Frontend Static Site
+  - type: web
+    name: crm-frontend
+    env: static
+    plan: starter
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://crm-backend.onrender.com/api
+    autoDeploy: true
+    branch: main
+    rootDir: frontend
+
+  # PostgreSQL Database
+  - type: pserv
+    name: crm-database
+    env: postgresql
+    plan: starter
+    region: oregon
+    autoDeploy: true
+    branch: main
+
+databases:
+  - name: crm-database
+    databaseName: crm_database
+    user: crm_user
+    plan: starter
+    region: oregon
