@@ -58,15 +58,6 @@ services:
     branch: main
     rootDir: frontend
 
-  # PostgreSQL Database
-  - type: pserv
-    name: crm-database
-    env: postgresql
-    plan: starter
-    region: oregon
-    autoDeploy: true
-    branch: main
-
 databases:
   - name: crm-database
     databaseName: crm_database
