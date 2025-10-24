@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import Loading from '../components/Loading';
 
 const AdminAuth = () => {
   const { login, register } = useAuth();
-  const { t } = useLanguage();
+  const { t: _t } = useLanguage();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   

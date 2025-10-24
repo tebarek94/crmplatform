@@ -218,7 +218,7 @@ interface ResponsiveModalProps {
 
 export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({ 
   isOpen, 
-  onClose, 
+  onClose: _onClose, 
   children, 
   className = '' 
 }) => {
@@ -292,19 +292,4 @@ export const ResponsiveVisibility: React.FC<ResponsiveVisibilityProps> = ({
   );
 };
 
-// Export all components
-export {
-  ResponsiveContainer,
-  ResponsiveGrid,
-  ResponsiveText,
-  ResponsiveButton,
-  ResponsiveCard,
-  ResponsiveImage,
-  ResponsiveForm,
-  ResponsiveInput,
-  ResponsiveTextarea,
-  ResponsiveModal,
-  ResponsiveTable,
-  ResponsiveNav,
-  ResponsiveVisibility,
-};
+// Components are already exported above

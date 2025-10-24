@@ -9,6 +9,12 @@ export interface CreateCommentData {
 }
 
 export const commentsAPI = {
+  getAll: async (status?: string): Promise<{ comments: Comment[] }> => {
+    const url = status ? `/comments?status=${status}` : '/comments';
+    const response = await api.get(url);
+    return response.data;
+  },
+
   getByArticle: async (articleId: number): Promise<{ comments: Comment[] }> => {
     const response = await api.get(`/comments/article/${articleId}`);
     return response.data;

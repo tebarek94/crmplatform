@@ -10,7 +10,7 @@ interface CommentSectionProps {
 
 const CommentSection = ({ articleId }: CommentSectionProps) => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t: _t } = useLanguage();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);

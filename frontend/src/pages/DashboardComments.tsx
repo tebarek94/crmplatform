@@ -7,13 +7,13 @@ import Loading from '../components/Loading';
 import type { Comment } from '../types';
 
 const DashboardComments = () => {
-  const { user } = useAuth();
-  const { t } = useLanguage();
+  const { user: _user } = useAuth();
+  const { t: _t } = useLanguage();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'spam'>('all');
-  const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [_selectedComment, _setSelectedComment] = useState<Comment | null>(null);
+  const [_showModal, _setShowModal] = useState(false);
 
   useEffect(() => {
     fetchComments();
