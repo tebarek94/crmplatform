@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
 
 const LoginPage = () => {
   const { login } = useAuth();
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
