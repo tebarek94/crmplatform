@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import PublicNavbar from './components/PublicNavbar';
 import Footer from './components/Footer';
@@ -9,11 +9,6 @@ import Categories from './pages/Categories';
 import NotFound from './pages/NotFound';
 
 function AppContent() {
-  const location = useLocation();
-  const isPublicPage = ['/', '/categories'].includes(location.pathname) || 
-                       location.pathname.startsWith('/article/') ||
-                       (location.pathname.startsWith('/articles/') && location.pathname !== '/articles');
-  
   return (
     <div className="flex flex-col min-h-screen">
       <PublicNavbar />
