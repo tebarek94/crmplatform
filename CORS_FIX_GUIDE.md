@@ -2,7 +2,7 @@
 
 ## 🚨 URGENT: CORS Error Fix
 
-Your admin frontend at `https://musliminstutionsadminpn.onrender.com` is being blocked by CORS policy when trying to access the API at `https://crmplatform9.onrender.com`.
+Your admin frontend at `https://musliminstutionsadminplaneorg.onrender.com` is being blocked by CORS policy when trying to access the API at `https://crmplatform9.onrender.com`.
 
 ## ✅ What I Fixed
 
@@ -35,7 +35,7 @@ After deployment, test the API:
 ```bash
 # Test CORS preflight
 curl -X OPTIONS \
-  -H "Origin: https://musliminstutionsadminpn.onrender.com" \
+  -H "Origin: https://musliminstutionsadminplaneorg.onrender.com" \
   -H "Access-Control-Request-Method: POST" \
   -H "Access-Control-Request-Headers: Content-Type,Authorization" \
   https://crmplatform9.onrender.com/api/auth/login
@@ -55,8 +55,9 @@ origin: [
 ### After:
 ```javascript
 origin: [
-  'https://musliminstutionorg1.onrender.com',     // Frontend
-  'https://musliminstutionsadminpn.onrender.com'  // Admin panel ✅
+  'https://musliminstutionorg1.onrender.com',        // Frontend
+  'https://musliminstutionsadminpn.onrender.com',     // Admin panel (old)
+  'https://musliminstutionsadminplaneorg.onrender.com' // Admin panel (current) ✅
 ]
 ```
 
@@ -75,7 +76,7 @@ origin: [
 
 ## 🧪 Test After Deployment
 
-1. **Visit your admin panel:** `https://musliminstutionsadminpn.onrender.com`
+1. **Visit your admin panel:** `https://musliminstutionsadminplaneorg.onrender.com`
 2. **Try to login** with demo credentials:
    - Email: `admin@example.com`
    - Password: `admin123`
@@ -84,7 +85,7 @@ origin: [
 ## 🆘 If Still Having Issues
 
 1. **Check Render logs** for deployment status
-2. **Verify the domain** is exactly: `https://musliminstutionsadminpn.onrender.com`
+2. **Verify the domain** is exactly: `https://musliminstutionsadminplaneorg.onrender.com`
 3. **Clear browser cache** and try again
 4. **Check browser console** for any remaining errors
 

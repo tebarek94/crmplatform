@@ -22,7 +22,8 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'https://musliminstutionorg1.onrender.com',
   'https://musliminstutionsadminpn.onrender.com',
-  'https://musliminstutionsadminpn.onrender.com/'
+  'https://musliminstutionsadminplaneorg.onrender.com',
+  'https://musliminstutionsadminplaneorg.onrender.com/'
 ];
 
 // Add any additional origins from environment variable
