@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import api from '../api/config';
+import OfflineMode from './OfflineMode';
 
 const ApiHealthCheck = () => {
   const [status, setStatus] = useState<'checking' | 'success' | 'error'>('checking');
   const [error, setError] = useState<string>('');
   const [responseTime, setResponseTime] = useState<number>(0);
+  const [showOfflineMode, setShowOfflineMode] = useState(false);
 
   useEffect(() => {
     checkApiHealth();
@@ -18,13 +20,24 @@ const ApiHealthCheck = () => {
       setResponseTime(endTime - startTime);
       setStatus('success');
       setError('');
+      setShowOfflineMode(false);
     } catch (err: any) {
       const endTime = Date.now();
       setResponseTime(endTime - startTime);
       setStatus('error');
       setError(err.message || 'Unknown error');
+      
+      // Show offline mode if it's a network error
+      if (!err.response || err.code === 'ECONNABORTED') {
+        setShowOfflineMode(true);
+      }
     }
   };
+
+  // Show offline mode if there are critical connection issues
+  if (showOfflineMode) {
+    return <OfflineMode />;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -62,7 +75,10 @@ const ApiHealthCheck = () => {
       </div>
 
       <button
-        onClick={checkApiHealth}
+        onClick={() => {
+          setShowOfflineMode(false);
+          checkApiHealth();
+        }}
         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
       >
         Retry Connection
