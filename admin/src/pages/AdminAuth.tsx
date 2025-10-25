@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
 
 const AdminAuth = () => {
   const { login, register, isAuthenticated, loading } = useAuth();
-  const { t: _t } = useLanguage();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
-  const [_loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [apiAvailable, setApiAvailable] = useState(true);
   
   // Password visibility states
   const [showLoginPassword, setShowLoginPassword] = useState(false);
@@ -47,7 +46,7 @@ const AdminAuth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     setError('');
     setSuccess('');
 
@@ -56,35 +55,39 @@ const AdminAuth = () => {
       // Redirect to dashboard after successful login
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      console.error('Login error:', err);
+      setError(err.message || 'Login failed. Please check your credentials.');
+      setApiAvailable(false);
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     setError('');
     setSuccess('');
 
     if (registerForm.password !== registerForm.confirmPassword) {
       setError('Passwords do not match');
-      setLoading(false);
+      setFormLoading(false);
       return;
     }
 
     try {
       await register(registerForm.username, registerForm.email, registerForm.password);
-      setSuccess('Account created successfully! Redirecting to dashboard...');
+      setSuccess('Registration successful! You are now logged in.');
       // Redirect to dashboard after successful registration
       setTimeout(() => {
         navigate('/dashboard');
-      }, 1500);
+      }, 1000);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
+      setApiAvailable(false);
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
@@ -182,9 +185,10 @@ const AdminAuth = () => {
 
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
+                disabled={formLoading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign In
+                {formLoading ? 'Signing In...' : 'Sign In'}
               </button>
             </form>
           ) : (
@@ -291,9 +295,10 @@ const AdminAuth = () => {
 
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
+                disabled={formLoading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Account
+                {formLoading ? 'Creating Account...' : 'Create Account'}
               </button>
             </form>
           )}
@@ -319,6 +324,32 @@ const AdminAuth = () => {
               <strong>Password:</strong> admin123
             </p>
           </div>
+
+          {/* API Status */}
+          {!apiAvailable && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">
+                    API Connection Issue
+                  </h3>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <p>The API server appears to be unavailable. Please check:</p>
+                    <ul className="mt-1 list-disc list-inside">
+                      <li>Network connection</li>
+                      <li>API server status</li>
+                      <li>Browser console for details</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
