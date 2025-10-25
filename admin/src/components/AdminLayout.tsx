@@ -41,7 +41,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/admin-auth');
   };
 
   const menuItems = [
