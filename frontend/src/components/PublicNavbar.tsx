@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const PublicNavbar = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const { t } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -39,12 +39,26 @@ const PublicNavbar = () => {
           <div className="flex items-center gap-2 sm:gap-4">
             <LanguageSwitcher />
             
-            {isAuthenticated && (
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 hidden sm:inline">
+                  Welcome, {user?.username}
+                </span>
+                <button
+                  onClick={() => {
+                    logout();
+                  }}
+                  className="btn-responsive-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                >
+                  {t('logout')}
+                </button>
+              </div>
+            ) : (
               <Link
-                to="/dashboard"
+                to="/login"
                 className="btn-responsive-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium hidden sm:inline-flex"
               >
-                {t('dashboard')}
+                {t('login')}
               </Link>
             )}
 
@@ -84,14 +98,29 @@ const PublicNavbar = () => {
                 {t('categories')}
               </Link>
               
-              {isAuthenticated && (
+              {isAuthenticated ? (
+                <div className="border-t border-gray-200 pt-3 mt-3 px-4">
+                  <div className="text-sm text-gray-600 mb-2 text-center">
+                    Welcome, {user?.username}
+                  </div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="block bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-center w-full"
+                  >
+                    {t('logout')}
+                  </button>
+                </div>
+              ) : (
                 <div className="border-t border-gray-200 pt-3 mt-3 px-4">
                   <Link
-                    to="/dashboard"
+                    to="/login"
                     className="block bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition text-center"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {t('dashboard')}
+                    {t('login')}
                   </Link>
                 </div>
               )}
