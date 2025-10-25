@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { articlesAPI } from '../api/articles';
 import AdminLayout from '../components/AdminLayout';
 import DashboardStats from '../components/DashboardStats';
+import ApiHealthCheck from '../components/ApiHealthCheck';
 import type { Article } from '../types';
 
 const Dashboard = () => {
@@ -43,6 +44,9 @@ const Dashboard = () => {
 
   return (
     <AdminLayout>
+      {/* API Health Check */}
+      <ApiHealthCheck />
+      
       {/* Welcome Card */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-800 text-white rounded-xl shadow-lg p-8 mb-8">
         <div className="flex justify-between items-start">
