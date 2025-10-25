@@ -1,5 +1,5 @@
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminAuth from './pages/AdminAuth';
@@ -9,12 +9,31 @@ import ArticleForm from './pages/ArticleForm';
 import DashboardCategories from './pages/DashboardCategories';
 import DashboardComments from './pages/DashboardComments';
 import NotFound from './pages/NotFound';
+import Loading from './components/Loading';
+
+// Component to handle root path redirects based on auth status
+function RootRedirect() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Navigate to="/admin-auth" replace />;
+}
 
 function AppContent() {
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-grow">
         <Routes>
+          {/* Root path - redirect based on auth status */}
+          <Route path="/" element={<RootRedirect />} />
+          
           {/* Admin Auth Route */}
           <Route path="/admin-auth" element={<AdminAuth />} />
           
@@ -67,9 +86,6 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          
-          {/* Default redirect to dashboard */}
-          <Route path="/" element={<AdminAuth />} />
           
           {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
