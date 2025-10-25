@@ -1,11 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const PublicNavbar = () => {
-  const { isAuthenticated, user, logout } = useAuth();
   const { t } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -39,29 +37,6 @@ const PublicNavbar = () => {
           <div className="flex items-center gap-2 sm:gap-4">
             <LanguageSwitcher />
             
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 hidden sm:inline">
-                  Welcome, {user?.username}
-                </span>
-                <button
-                  onClick={() => {
-                    logout();
-                  }}
-                  className="btn-responsive-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
-                >
-                  {t('logout')}
-                </button>
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                className="btn-responsive-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium hidden sm:inline-flex"
-              >
-                {t('login')}
-              </Link>
-            )}
-
             {/* Mobile Menu Button */}
             <button
               onClick={toggleMobileMenu}
@@ -97,33 +72,6 @@ const PublicNavbar = () => {
               >
                 {t('categories')}
               </Link>
-              
-              {isAuthenticated ? (
-                <div className="border-t border-gray-200 pt-3 mt-3 px-4">
-                  <div className="text-sm text-gray-600 mb-2 text-center">
-                    Welcome, {user?.username}
-                  </div>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="block bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-center w-full"
-                  >
-                    {t('logout')}
-                  </button>
-                </div>
-              ) : (
-                <div className="border-t border-gray-200 pt-3 mt-3 px-4">
-                  <Link
-                    to="/login"
-                    className="block bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition text-center"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {t('login')}
-                  </Link>
-                </div>
-              )}
             </div>
           </div>
         )}

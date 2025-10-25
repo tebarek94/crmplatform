@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import type { Comment } from '../types';
 import { commentsAPI } from '../api/comments';
@@ -9,12 +8,12 @@ interface CommentSectionProps {
 }
 
 const CommentSection = ({ articleId }: CommentSectionProps) => {
-  const { user } = useAuth();
   const { t: _t } = useLanguage();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [authorName, setAuthorName] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -36,7 +35,7 @@ const CommentSection = ({ articleId }: CommentSectionProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !authorName.trim()) return;
     
     setSubmitting(true);
     setError('');
@@ -44,17 +43,13 @@ const CommentSection = ({ articleId }: CommentSectionProps) => {
     try {
       const commentData: any = {
         article_id: articleId,
-        author_name: user?.username || 'Anonymous',
+        author_name: authorName.trim(),
         content: newComment.trim()
       };
 
-      // Only include email if user is logged in and has an email
-      if (user?.email) {
-        commentData.author_email = user.email;
-      }
-
       await commentsAPI.create(commentData);
       setNewComment('');
+      setAuthorName('');
       fetchComments(); // Refresh comments
     } catch (error: any) {
       setError(error.response?.data?.error || 'Failed to post comment');
@@ -97,8 +92,22 @@ const CommentSection = ({ articleId }: CommentSectionProps) => {
       <div className="mb-6 sm:mb-8">
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
+            <label htmlFor="authorName" className="block text-sm font-medium text-gray-700 mb-2">
+              Your Name:
+            </label>
+            <input
+              id="authorName"
+              type="text"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base"
+              placeholder="Enter your name"
+              required
+            />
+          </div>
+          <div>
             <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
-              {user ? `Leave a comment as ${user.username}:` : 'Leave a comment:'}
+              Your Comment:
             </label>
             <textarea
               id="comment"
@@ -119,11 +128,11 @@ const CommentSection = ({ articleId }: CommentSectionProps) => {
 
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
             <p className="text-xs sm:text-sm text-gray-500 order-2 sm:order-1">
-              {user ? 'Commenting as: ' + user.username : 'You will be commenting as Anonymous'}
+              Commenting as: {authorName || 'Anonymous'}
             </p>
             <button
               type="submit"
-              disabled={submitting || !newComment.trim()}
+              disabled={submitting || !newComment.trim() || !authorName.trim()}
               className="bg-primary-600 text-white px-4 sm:px-6 py-2 sm:py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-sm sm:text-base order-1 sm:order-2 w-full sm:w-auto"
             >
               {submitting ? 'Posting...' : 'Post Comment'}
