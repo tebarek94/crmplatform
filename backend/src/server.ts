@@ -13,16 +13,15 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(helmet()); // Security headers
-
-// CORS configuration
+// CORS configuration - MUST be before other middleware
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
+  "http://localhost:5174",
   "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
   "https://blogbackend-s6k5.onrender.com",
-  "https://blogadminside.onrender.com", // Add your deployed frontend here
+  "https://blogadminside.onrender.com",
 ];
 
 // Add any additional origins from environment variable
@@ -33,27 +32,40 @@ if (process.env.ALLOWED_ORIGINS) {
   allowedOrigins.push(...additionalOrigins);
 }
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
+// Create CORS options object
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        console.log(`🚫 CORS blocked request from origin: ${origin}`);
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`🚫 CORS blocked request from origin: ${origin}`);
+      console.log(`✅ Allowed origins: ${allowedOrigins.join(", ")}`);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: false, // Match frontend withCredentials: false
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  exposedHeaders: ["Content-Range", "X-Content-Range"],
+  maxAge: 86400, // 24 hours
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Configure Helmet to not interfere with CORS
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
 
-// Ensure preflight requests work
-app.options("*", cors());
+// Handle preflight requests explicitly
+app.options("*", cors(corsOptions));
 
 // Parse incoming request bodies
 app.use(express.json());
